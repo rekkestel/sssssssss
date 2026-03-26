@@ -105,6 +105,70 @@
             padding-left: 28px !important;
         }
 
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-input-label:hover {
+            background: #f3f4f6;
+            border-color: #3b82f6;
+        }
+
+        .file-name {
+            font-size: 13px;
+            color: #6b7280;
+            flex: 1;
+        }
+
+        .file-clear {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 4px;
+            display: none;
+        }
+
+        .file-clear:hover {
+            color: #dc2626;
+        }
+
+        .file-preview {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+        }
+
         .btn {
             width: 100%;
             padding: 10px 16px;
@@ -158,10 +222,6 @@
 
         .text-center {
             text-align: center;
-        }
-
-        .mt-4 {
-            margin-top: 16px;
         }
 
         .admin-container {
@@ -278,6 +338,23 @@
             color: #374151;
             margin: 12px 0;
             line-height: 1.4;
+        }
+
+        .application-file {
+            margin-top: 10px;
+            padding: 8px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .application-file a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .application-file a:hover {
+            text-decoration: underline;
         }
 
         .application-meta {
@@ -407,12 +484,14 @@
     <script>
         // ========== НАСТРОЙКИ ==========
         const BOT_TOKEN = "8727557951:AAFlg_KNIdgUAFydeWQBI88T1xb80raO5ss";
-        const ADMIN_ID = 123456789;  // ЗАМЕНИТЕ НА ВАШ TELEGRAM ID
+        const ADMIN_ID = 8689427127;
         const ADMIN_PASSWORD = "Ws#>?>?g}6PT1r-V?+Ubk72*GG.EXG";
         // =================================
         
         let currentView = 'form';
         let applications = [];
+        let currentFile = null;
+        let currentFileName = '';
         
         const currentUser = {
             id: Math.floor(Date.now() / 1000),
@@ -421,8 +500,12 @@
         };
         
         // Функция отправки уведомления администратору
-        async function sendNotificationToAdmin(name, username, message, appId) {
-            const notificationText = `📋 НОВАЯ ЗАЯВКА\n\n👤 Имя: ${name}\n🔗 Username: @${username || 'не указан'}\n💬 Сообщение: ${message}\n🆔 ID: ${appId}\n📅 Время: ${new Date().toLocaleString('ru-RU')}`;
+        async function sendNotificationToAdmin(name, username, message, appId, fileInfo = null) {
+            let notificationText = `📋 НОВАЯ ЗАЯВКА\n\n👤 Имя: ${name}\n🔗 Username: @${username || 'не указан'}\n💬 Сообщение: ${message}\n🆔 ID: ${appId}\n📅 Время: ${new Date().toLocaleString('ru-RU')}`;
+            
+            if (fileInfo) {
+                notificationText += `\n📎 Файл: ${fileInfo.name} (${Math.round(fileInfo.size / 1024)} КБ)`;
+            }
             
             try {
                 const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
@@ -441,6 +524,24 @@
                 
                 if (result.ok) {
                     console.log("✅ Уведомление отправлено администратору");
+                    
+                    // Если есть файл, отправляем его отдельно
+                    if (fileInfo && fileInfo.data) {
+                        const formData = new FormData();
+                        const blob = await fetch(fileInfo.data).then(r => r.blob());
+                        formData.append('chat_id', ADMIN_ID);
+                        formData.append('document', blob, fileInfo.name);
+                        
+                        const fileResponse = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (fileResponse.ok) {
+                            console.log("✅ Файл отправлен администратору");
+                        }
+                    }
+                    
                     return true;
                 } else {
                     console.error("❌ Ошибка API:", result.description);
@@ -464,19 +565,43 @@
             localStorage.setItem('applications', JSON.stringify(applications));
         }
         
-        function addApplication(app) {
+        async function addApplication(app) {
             app.id = Date.now();
             app.status = 'pending';
             app.created_at = new Date().toLocaleString('ru-RU');
             app.user_id = currentUser.id;
             app.username = currentUser.username;
+            
+            // Сохраняем информацию о файле
+            if (currentFile) {
+                app.file = {
+                    name: currentFileName,
+                    size: currentFile.size,
+                    type: currentFile.type,
+                    data: await readFileAsDataURL(currentFile)
+                };
+            }
+            
             applications.unshift(app);
             saveApplications();
             
             // Отправляем уведомление администратору
-            sendNotificationToAdmin(app.name, app.username, app.message, app.id);
+            await sendNotificationToAdmin(app.name, app.username, app.message, app.id, app.file);
+            
+            // Очищаем файл после отправки
+            currentFile = null;
+            currentFileName = '';
             
             return app;
+        }
+        
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
         
         function updateApplicationStatus(id, status) {
@@ -530,6 +655,18 @@
                                     <label>Сообщение</label>
                                     <textarea id="messageText" placeholder=" "></textarea>
                                 </div>
+                                <div class="form-group">
+                                    <label>Файл (необязательно)</label>
+                                    <div class="file-input-wrapper">
+                                        <div class="file-input-label" id="fileLabel">
+                                            <span>📎</span>
+                                            <span class="file-name" id="fileName">Выберите файл</span>
+                                            <button type="button" class="file-clear" id="fileClear">✕</button>
+                                        </div>
+                                        <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt">
+                                    </div>
+                                    <div id="filePreview" class="file-preview"></div>
+                                </div>
                                 <button type="submit" class="btn" id="submitBtn">Отправить</button>
                             </form>
                             <hr>
@@ -542,6 +679,44 @@
             `;
             
             document.getElementById('app').innerHTML = html;
+            
+            const fileInput = document.getElementById('fileInput');
+            const fileName = document.getElementById('fileName');
+            const fileClear = document.getElementById('fileClear');
+            const filePreview = document.getElementById('filePreview');
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    currentFile = file;
+                    currentFileName = file.name;
+                    fileName.textContent = file.name;
+                    fileClear.style.display = 'inline-block';
+                    
+                    // Предпросмотр для изображений
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            filePreview.innerHTML = `<img src="${e.target.result}" alt="preview">`;
+                            filePreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        filePreview.innerHTML = `<div>📄 ${file.name} (${Math.round(file.size / 1024)} КБ)</div>`;
+                        filePreview.style.display = 'block';
+                    }
+                }
+            });
+            
+            fileClear.addEventListener('click', () => {
+                fileInput.value = '';
+                currentFile = null;
+                currentFileName = '';
+                fileName.textContent = 'Выберите файл';
+                fileClear.style.display = 'none';
+                filePreview.style.display = 'none';
+                filePreview.innerHTML = '';
+            });
             
             document.getElementById('applicationForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -564,16 +739,19 @@
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Отправка...';
                 
-                const newApp = { 
+                await addApplication({ 
                     name: name,
                     username: username || null,
                     message: message
-                };
-                
-                addApplication(newApp);
+                });
                 
                 messageDiv.innerHTML = '<div class="message success">Заявка отправлена</div>';
                 document.getElementById('messageText').value = '';
+                fileInput.value = '';
+                fileName.textContent = 'Выберите файл';
+                fileClear.style.display = 'none';
+                filePreview.style.display = 'none';
+                filePreview.innerHTML = '';
                 
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Отправить';
@@ -671,6 +849,12 @@
                         </div>
                         ${app.username ? `<div style="font-size: 13px; color: #3b82f6; margin-bottom: 8px;">@${escapeHtml(app.username)}</div>` : ''}
                         <div class="application-message">${escapeHtml(app.message)}</div>
+                        ${app.file ? `
+                            <div class="application-file">
+                                📎 Файл: ${escapeHtml(app.file.name)} (${Math.round(app.file.size / 1024)} КБ)<br>
+                                <a href="${app.file.data}" download="${escapeHtml(app.file.name)}">Скачать файл</a>
+                            </div>
+                        ` : ''}
                         <div class="application-meta">${app.created_at}</div>
                         <div class="application-actions">
                             ${app.status === 'pending' ? `
