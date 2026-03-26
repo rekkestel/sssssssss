@@ -405,11 +405,11 @@
     <div id="app"></div>
 
     <script>
-        // НАСТРОЙКИ ДЛЯ УВЕДОМЛЕНИЙ
-        const BOT_TOKEN = "8727557951:AAFlg_KNIdgUAFydeWQBI88T1xb80raO5ss";  // Токен вашего бота
-        const ADMIN_ID = 123456789;  // ВАШ TELEGRAM ID (получите у @userinfobot)
-        
+        // ========== НАСТРОЙКИ ==========
+        const BOT_TOKEN = "8727557951:AAFlg_KNIdgUAFydeWQBI88T1xb80raO5ss";
+        const ADMIN_ID = 123456789;  // ЗАМЕНИТЕ НА ВАШ TELEGRAM ID
         const ADMIN_PASSWORD = "Ws#>?>?g}6PT1r-V?+Ubk72*GG.EXG";
+        // =================================
         
         let currentView = 'form';
         let applications = [];
@@ -433,13 +433,21 @@
                     },
                     body: JSON.stringify({
                         chat_id: ADMIN_ID,
-                        text: notificationText,
-                        parse_mode: 'HTML'
+                        text: notificationText
                     })
                 });
-                return response.ok;
+                
+                const result = await response.json();
+                
+                if (result.ok) {
+                    console.log("✅ Уведомление отправлено администратору");
+                    return true;
+                } else {
+                    console.error("❌ Ошибка API:", result.description);
+                    return false;
+                }
             } catch (error) {
-                console.error('Ошибка отправки уведомления:', error);
+                console.error('❌ Ошибка отправки:', error);
                 return false;
             }
         }
@@ -668,7 +676,7 @@
                             ${app.status === 'pending' ? `
                                 <button class="btn-small btn-accept" onclick="updateAppStatus(${app.id}, 'accepted')">Принять</button>
                             ` : ''}
-                            <button class="btn-small btn-reply" onclick="openReplyModal(${app.id}, '${escapeHtml(app.name)}', '${app.username ? escapeHtml(app.username) : ''}')">Ответить</button>
+                            <button class="btn-small btn-reply" onclick="openReplyModal(${app.id}, '${escapeHtml(app.name)}')">Ответить</button>
                         </div>
                     </div>
                 `).join('');
