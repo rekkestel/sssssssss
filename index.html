@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заявки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f8f9fa;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 32px 24px 0 24px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .form {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            background: #ffffff;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 96px;
+        }
+
+        .username-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .username-prefix {
+            position: absolute;
+            left: 12px;
+            color: #9ca3af;
+            font-size: 15px;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .username-input {
+            padding-left: 28px !important;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px 16px;
+            background: #111827;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #1f2937;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #d1fae5;
+        }
+
+        .error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fee2e2;
+        }
+
+        hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-4 {
+            margin-top: 16px;
+        }
+
+        .admin-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .admin-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f9fafb;
+            padding: 12px 16px;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-card h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-card p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: #111827;
+            color: white;
+            border-color: #111827;
+        }
+
+        .applications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .application-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .application-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .application-name {
+            font-weight: 500;
+            color: #111827;
+        }
+
+        .application-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .application-status.pending {
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+        .application-status.accepted {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .application-message {
+            font-size: 14px;
+            color: #374151;
+            margin: 12px 0;
+            line-height: 1.4;
+        }
+
+        .application-meta {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        .application-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 4px 12px;
+            font-size: 12px;
+            width: auto;
+        }
+
+        .btn-accept {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-accept:hover {
+            background: #059669;
+        }
+
+        .btn-reply {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-reply:hover {
+            background: #2563eb;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 8px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            background: #111827;
+            color: white;
+            border-color: #111827;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-content h3 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 16px 0;
+            min-height: 100px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .password-input {
+            margin-bottom: 20px;
+        }
+
+        .password-input input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .password-input input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        // НАСТРОЙКИ ДЛЯ УВЕДОМЛЕНИЙ
+        const BOT_TOKEN = "8727557951:AAFlg_KNIdgUAFydeWQBI88T1xb80raO5ss";  // Токен вашего бота
+        const ADMIN_ID = 123456789;  // ВАШ TELEGRAM ID (получите у @userinfobot)
+        
+        const ADMIN_PASSWORD = "Ws#>?>?g}6PT1r-V?+Ubk72*GG.EXG";
+        
+        let currentView = 'form';
+        let applications = [];
+        
+        const currentUser = {
+            id: Math.floor(Date.now() / 1000),
+            username: '',
+            name: ''
+        };
+        
+        // Функция отправки уведомления администратору
+        async function sendNotificationToAdmin(name, username, message, appId) {
+            const notificationText = `📋 НОВАЯ ЗАЯВКА\n\n👤 Имя: ${name}\n🔗 Username: @${username || 'не указан'}\n💬 Сообщение: ${message}\n🆔 ID: ${appId}\n📅 Время: ${new Date().toLocaleString('ru-RU')}`;
+            
+            try {
+                const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: ADMIN_ID,
+                        text: notificationText,
+                        parse_mode: 'HTML'
+                    })
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('Ошибка отправки уведомления:', error);
+                return false;
+            }
+        }
+        
+        function loadApplications() {
+            const stored = localStorage.getItem('applications');
+            if (stored) {
+                applications = JSON.parse(stored);
+            }
+            return applications;
+        }
+        
+        function saveApplications() {
+            localStorage.setItem('applications', JSON.stringify(applications));
+        }
+        
+        function addApplication(app) {
+            app.id = Date.now();
+            app.status = 'pending';
+            app.created_at = new Date().toLocaleString('ru-RU');
+            app.user_id = currentUser.id;
+            app.username = currentUser.username;
+            applications.unshift(app);
+            saveApplications();
+            
+            // Отправляем уведомление администратору
+            sendNotificationToAdmin(app.name, app.username, app.message, app.id);
+            
+            return app;
+        }
+        
+        function updateApplicationStatus(id, status) {
+            const index = applications.findIndex(a => a.id == id);
+            if (index !== -1) {
+                applications[index].status = status;
+                saveApplications();
+                return true;
+            }
+            return false;
+        }
+        
+        function getApplicationsByStatus(status) {
+            if (status === 'all') return applications;
+            return applications.filter(a => a.status === status);
+        }
+        
+        function render() {
+            if (currentView === 'form') {
+                renderForm();
+            } else if (currentView === 'admin') {
+                renderAdminLogin();
+            } else if (currentView === 'adminPanel') {
+                renderAdminPanel();
+            }
+        }
+        
+        function renderForm() {
+            const html = `
+                <div class="container">
+                    <div class="card">
+                        <div class="header">
+                            <h1>Оставить заявку</h1>
+                            <p>Заполните форму, мы свяжемся с вами</p>
+                        </div>
+                        <div class="form">
+                            <div id="message"></div>
+                            <form id="applicationForm">
+                                <div class="form-group">
+                                    <label>Имя</label>
+                                    <input type="text" id="name" placeholder=" ">
+                                </div>
+                                <div class="form-group">
+                                    <label>Username</label>
+                                    <div class="username-wrapper">
+                                        <span class="username-prefix">@</span>
+                                        <input type="text" id="username" class="username-input" placeholder=" " autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Сообщение</label>
+                                    <textarea id="messageText" placeholder=" "></textarea>
+                                </div>
+                                <button type="submit" class="btn" id="submitBtn">Отправить</button>
+                            </form>
+                            <hr>
+                            <div class="text-center">
+                                <button class="btn btn-secondary" onclick="switchToAdmin()">Админ-панель</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('app').innerHTML = html;
+            
+            document.getElementById('applicationForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('name').value.trim();
+                const username = document.getElementById('username').value.trim();
+                const message = document.getElementById('messageText').value.trim();
+                const submitBtn = document.getElementById('submitBtn');
+                const messageDiv = document.getElementById('message');
+                
+                if (!name || !message) {
+                    messageDiv.innerHTML = '<div class="message error">Заполните имя и сообщение</div>';
+                    setTimeout(() => messageDiv.innerHTML = '', 3000);
+                    return;
+                }
+                
+                currentUser.name = name;
+                currentUser.username = username;
+                
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Отправка...';
+                
+                const newApp = { 
+                    name: name,
+                    username: username || null,
+                    message: message
+                };
+                
+                addApplication(newApp);
+                
+                messageDiv.innerHTML = '<div class="message success">Заявка отправлена</div>';
+                document.getElementById('messageText').value = '';
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Отправить';
+                
+                setTimeout(() => {
+                    if (messageDiv.innerHTML.includes('отправлена')) {
+                        messageDiv.innerHTML = '';
+                    }
+                }, 3000);
+            });
+        }
+        
+        function renderAdminLogin() {
+            const html = `
+                <div class="container">
+                    <div class="card">
+                        <div class="header">
+                            <h1>Вход</h1>
+                            <p>Введите пароль</p>
+                        </div>
+                        <div class="form">
+                            <div id="message"></div>
+                            <div class="password-input">
+                                <input type="password" id="password" placeholder=" ">
+                            </div>
+                            <button class="btn" onclick="checkAdminPassword()">Войти</button>
+                            <div class="text-center mt-4">
+                                <button class="btn btn-secondary" onclick="switchToForm()">Назад</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('app').innerHTML = html;
+        }
+        
+        function checkAdminPassword() {
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+            
+            if (password === ADMIN_PASSWORD) {
+                currentView = 'adminPanel';
+                render();
+            } else {
+                messageDiv.innerHTML = '<div class="message error">Неверный пароль</div>';
+                setTimeout(() => messageDiv.innerHTML = '', 2000);
+            }
+        }
+        
+        function renderAdminPanel() {
+            loadApplications();
+            
+            let currentFilter = 'all';
+            
+            function updateStats() {
+                const stats = {
+                    total: applications.length,
+                    pending: applications.filter(a => a.status === 'pending').length,
+                    accepted: applications.filter(a => a.status === 'accepted').length
+                };
+                return stats;
+            }
+            
+            function renderApplicationsList() {
+                const stats = updateStats();
+                const filtered = getApplicationsByStatus(currentFilter);
+                const container = document.getElementById('applicationsList');
+                
+                const statsHtml = `
+                    <div class="stats">
+                        <div class="stat-card"><h3>${stats.total}</h3><p>Всего</p></div>
+                        <div class="stat-card"><h3>${stats.pending}</h3><p>В ожидании</p></div>
+                        <div class="stat-card"><h3>${stats.accepted}</h3><p>Принято</p></div>
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" data-status="all">Все</button>
+                        <button class="filter-btn ${currentFilter === 'pending' ? 'active' : ''}" data-status="pending">В ожидании</button>
+                        <button class="filter-btn ${currentFilter === 'accepted' ? 'active' : ''}" data-status="accepted">Принятые</button>
+                    </div>
+                `;
+                
+                document.getElementById('statsContainer').innerHTML = statsHtml;
+                
+                if (filtered.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Нет заявок</div>';
+                    return;
+                }
+                
+                container.innerHTML = filtered.map(app => `
+                    <div class="application-card">
+                        <div class="application-header">
+                            <span class="application-name">${escapeHtml(app.name)}</span>
+                            <span class="application-status ${app.status}">${app.status === 'pending' ? 'В ожидании' : 'Принята'}</span>
+                        </div>
+                        ${app.username ? `<div style="font-size: 13px; color: #3b82f6; margin-bottom: 8px;">@${escapeHtml(app.username)}</div>` : ''}
+                        <div class="application-message">${escapeHtml(app.message)}</div>
+                        <div class="application-meta">${app.created_at}</div>
+                        <div class="application-actions">
+                            ${app.status === 'pending' ? `
+                                <button class="btn-small btn-accept" onclick="updateAppStatus(${app.id}, 'accepted')">Принять</button>
+                            ` : ''}
+                            <button class="btn-small btn-reply" onclick="openReplyModal(${app.id}, '${escapeHtml(app.name)}', '${app.username ? escapeHtml(app.username) : ''}')">Ответить</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        currentFilter = btn.dataset.status;
+                        renderApplicationsList();
+                    });
+                });
+            }
+            
+            const html = `
+                <div class="admin-container">
+                    <div class="nav-buttons">
+                        <button class="nav-btn" onclick="switchToForm()">Форма</button>
+                        <button class="nav-btn active">Админ</button>
+                    </div>
+                    <div class="admin-header">
+                        <h2>Заявки</h2>
+                        <div id="statsContainer"></div>
+                        <div id="applicationsList"></div>
+                    </div>
+                </div>
+                <div id="replyModal" class="modal">
+                    <div class="modal-content">
+                        <h3>Ответить</h3>
+                        <textarea id="replyMessage" placeholder=" "></textarea>
+                        <div class="modal-buttons">
+                            <button class="btn" onclick="sendReply()">Отправить</button>
+                            <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('app').innerHTML = html;
+            
+            let currentAppId = null;
+            let currentAppName = null;
+            
+            window.updateAppStatus = function(id, status) {
+                updateApplicationStatus(id, status);
+                renderApplicationsList();
+            };
+            
+            window.openReplyModal = function(id, name) {
+                currentAppId = id;
+                currentAppName = name;
+                document.getElementById('replyModal').style.display = 'flex';
+            };
+            
+            window.sendReply = function() {
+                const message = document.getElementById('replyMessage').value.trim();
+                if (!message) {
+                    alert('Введите сообщение');
+                    return;
+                }
+                alert(`Сообщение для ${currentAppName} отправлено`);
+                closeModal();
+                if (currentAppId) {
+                    updateAppStatus(currentAppId, 'accepted');
+                }
+            };
+            
+            window.closeModal = function() {
+                document.getElementById('replyModal').style.display = 'none';
+                document.getElementById('replyMessage').value = '';
+            };
+            
+            renderApplicationsList();
+        }
+        
+        function switchToForm() {
+            currentView = 'form';
+            render();
+        }
+        
+        function switchToAdmin() {
+            currentView = 'admin';
+            render();
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        window.switchToForm = switchToForm;
+        window.switchToAdmin = switchToAdmin;
+        window.checkAdminPassword = checkAdminPassword;
+        
+        loadApplications();
+        render();
+    </script>
+</body>
+</html>
